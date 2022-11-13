@@ -90,9 +90,7 @@ class TestAccountService(TestCase):
         """It should Create a new Account"""
         account = AccountFactory()
         response = self.client.post(
-            BASE_URL,
-            json=account.serialize(),
-            content_type="application/json"
+            BASE_URL, json=account.serialize(), content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -108,8 +106,19 @@ class TestAccountService(TestCase):
         self.assertEqual(new_account["phone_number"], account.phone_number)
         self.assertEqual(new_account["date_joined"], str(account.date_joined))
 
+    def test_internal_server_error(self):
+        """It should throw an error error as setup by our error handler"""
+        # as there is
+        response = self.client.get("/internal-server-error")
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def test_bad_request(self):
         """It should not Create an Account when sending the wrong data"""
+        response = self.client.post(BASE_URL, json={"name": "not enough data"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_not_found(self):
+        """It should return a not found error when trying to access an invalid url"""
         response = self.client.post(BASE_URL, json={"name": "not enough data"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -117,10 +126,27 @@ class TestAccountService(TestCase):
         """It should not Create an Account when sending the wrong media type"""
         account = AccountFactory()
         response = self.client.post(
-            BASE_URL,
-            json=account.serialize(),
-            content_type="test/html"
+            BASE_URL, json=account.serialize(), content_type="test/html"
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    # ADD YOUR TEST CASES HERE ...
+    def test_get_account(self):
+        """It should be get an account by ID"""
+        # first we fetch a non existing account
+        response = self.client.get(f"{BASE_URL}/{12345}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        account = AccountFactory()
+        # create the account
+        response = self.client.post(
+            BASE_URL, json=account.serialize(), content_type="application/json"
+        )
+        created_acc = response.get_json()
+        # a test post request
+        response = self.client.post(f"{BASE_URL}/{created_acc['id']}")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # now we fetch get the user and tests if they are present
+        response = self.client.get(f"{BASE_URL}/{created_acc['id']}")
+        res_acc = response.get_json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_acc["name"], account.name)
+        self.assertEqual(res_acc["email"], account.email)

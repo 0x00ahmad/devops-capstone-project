@@ -4,7 +4,7 @@ Account Service
 This microservice handles the lifecycle of Accounts
 """
 # pylint: disable=unused-import
-from flask import jsonify, request, make_response, abort, url_for   # noqa; F401
+from flask import jsonify, request, make_response, abort, url_for  # noqa; F401
 from service.models import Account
 from service.common import status  # HTTP Status Codes
 from . import app  # Import Flask application
@@ -17,6 +17,11 @@ from . import app  # Import Flask application
 def health():
     """Health Status"""
     return jsonify(dict(status="OK")), status.HTTP_200_OK
+
+
+@app.route("/internal-server-error")
+def test_for_internal_server_error_handler():
+    abort(500)
 
 
 ######################################################################
@@ -57,6 +62,7 @@ def create_accounts():
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
+
 ######################################################################
 # LIST ALL ACCOUNTS
 ######################################################################
@@ -67,8 +73,21 @@ def create_accounts():
 ######################################################################
 # READ AN ACCOUNT
 ######################################################################
-
-# ... place you code here to READ an account ...
+@app.route("/accounts/<account_id>", methods=["GET"])
+def get_account(account_id):
+    """
+    Returns an Account
+    This endpoint will query an Account matching the account id passed
+    """
+    app.logger.info("Request for getting an Account's info")
+    account = Account.find(by_id=account_id)
+    res_payload = account if not account else account.serialize()
+    if not account:
+        abort(status.HTTP_404_NOT_FOUND)
+    return make_response(
+        jsonify(res_payload),
+        status.HTTP_200_OK,
+    )
 
 
 ######################################################################
