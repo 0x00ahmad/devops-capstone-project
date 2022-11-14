@@ -102,8 +102,24 @@ def get_account(account_id):
 ######################################################################
 # UPDATE AN EXISTING ACCOUNT
 ######################################################################
-
-# ... place you code here to UPDATE an account ...
+@app.route("/accounts/<int:account_id>", methods=["PUT"])
+def update_account_info(account_id):
+    """
+    Update an Account's info
+    This endpoint will update the Account's info based on the payload passed
+    returns the updated account after saving the changes
+    """
+    app.logger.info(f"Request for updating an account {account_id=}")
+    check_content_type("application/json")
+    account = Account.find(by_id=account_id)
+    if not account:
+        abort(404, f"Account with {account_id=} not found")
+    payload: dict = request.get_json()  # type: ignore
+    if "id" in payload:
+        abort(400, f"ID is cannot be changed")
+    account.deserialize(payload)
+    account.update()
+    return account.serialize(), status.HTTP_200_OK
 
 
 ######################################################################

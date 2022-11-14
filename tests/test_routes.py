@@ -54,7 +54,7 @@ class TestAccountService(TestCase):
     #  H E L P E R   M E T H O D S
     ######################################################################
 
-    def _create_accounts(self, count):
+    def _create_accounts(self, count: int) -> list[AccountFactory]:
         """Factory method to create accounts in bulk"""
         accounts = []
         for _ in range(count):
@@ -173,3 +173,32 @@ class TestAccountService(TestCase):
         if not accounts_list:  # to make pylance happy
             return
         self.assertEqual(len(accounts_list), ACCOUNT_COUNT)
+
+    def test_update_account(self):
+        """It should update an account's info"""
+        account = self._create_accounts(1)[0]
+        updated_account_info = {
+            "id": "randomly passed id",
+            "name": "new test name",
+            "email": "newemail@test.com",
+            "address": "new test address",
+        }
+        # security: don't allow updating an id
+        res = self.client.put(
+            f"{BASE_URL}/{account.id}",
+            json=updated_account_info,
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        del updated_account_info["id"]
+
+        # now test for a sucessful update
+        res = self.client.put(
+            f"{BASE_URL}/{account.id}",
+            json=updated_account_info,
+            content_type="application/json",
+        )
+        res_json = res.get_json()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        for attribute in updated_account_info:
+            self.assertEqual(res_json[attribute], updated_account_info[attribute])
