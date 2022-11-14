@@ -125,8 +125,21 @@ def update_account_info(account_id):
 ######################################################################
 # DELETE AN ACCOUNT
 ######################################################################
-
-# ... place you code here to DELETE an account ...
+@app.route("/accounts/<int:account_id>", methods=["DELETE"])
+def delete_account(account_id):
+    """
+    Deletes an Account
+    This endpoint will update the Account's info based on the payload passed
+    returns the updated account after saving the changes
+    """
+    account = Account.find(by_id=account_id)
+    if not account:
+        return make_response(
+            jsonify({"detail": "not found"}, status.HTTP_404_NOT_FOUND)
+        )
+    # delete the account
+    account.delete()
+    return make_response("", status.HTTP_204_NO_CONTENT)
 
 
 ######################################################################
