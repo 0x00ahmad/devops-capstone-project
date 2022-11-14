@@ -156,3 +156,20 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(res_acc["name"], account.name)
         self.assertEqual(res_acc["email"], account.email)
+
+    def test_list_all_accounts(self):
+        """It should listing all accounts"""
+        # first we fetch a non existing account
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.get_json(), [])
+        ACCOUNT_COUNT = 10
+        # create multiple accounts
+        self._create_accounts(ACCOUNT_COUNT)
+        # now we fetch get the user and tests if they are present
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        accounts_list = response.get_json()
+        if not accounts_list:  # to make pylance happy
+            return
+        self.assertEqual(len(accounts_list), ACCOUNT_COUNT)
