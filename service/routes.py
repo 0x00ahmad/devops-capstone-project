@@ -73,8 +73,6 @@ def create_accounts():
 ######################################################################
 # READ AN ACCOUNT
 ######################################################################
-
-
 @app.route("/accounts/<account_id>", methods=["GET"])
 def get_account(account_id):
     """
