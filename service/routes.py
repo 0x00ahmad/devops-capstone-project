@@ -116,7 +116,7 @@ def update_account_info(account_id):
         abort(404, f"Account with {account_id=} not found")
     payload: dict = request.get_json()  # type: ignore
     if "id" in payload:
-        abort(400, "ID is cannot be changed")
+        abort(400, f"ID is cannot be changed")
     account.deserialize(payload)
     account.update()
     return account.serialize(), status.HTTP_200_OK
