@@ -86,6 +86,12 @@ class TestAccountService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["status"], "OK")
 
+    def test_internal_server_error(self):
+        """It should throw an error error as setup by our error handler"""
+        # as there is
+        response = self.client.get("/internal-server-error")
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def test_create_account(self):
         """It should Create a new Account"""
         account = AccountFactory()
